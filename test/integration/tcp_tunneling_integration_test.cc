@@ -254,7 +254,11 @@ public:
 };
 
 INSTANTIATE_TEST_SUITE_P(Protocols, ProxyingConnectIntegrationTest,
-                         testing::ValuesIn(HttpProtocolIntegrationTest::getProtocolTestParams()),
+                         testing::ValuesIn(HttpProtocolIntegrationTest::getProtocolTestParams(
+                             {Http::CodecClient::Type::HTTP1, Http::CodecClient::Type::HTTP2,
+                              Http::CodecClient::Type::HTTP3},
+                             {FakeHttpConnection::Type::HTTP1, FakeHttpConnection::Type::HTTP2,
+                              FakeHttpConnection::Type::HTTP3})),
                          HttpProtocolIntegrationTest::protocolTestParamsToString);
 
 TEST_P(ProxyingConnectIntegrationTest, ProxyConnect) {
@@ -452,10 +456,12 @@ public:
       : HttpIntegrationTest(Http::CodecClient::Type::HTTP2, std::get<0>(GetParam())) {}
 
   static std::string paramsToString(const testing::TestParamInfo<Params>& p) {
-    return fmt::format(
-        "{}_{}_{}", std::get<0>(p.param) == Network::Address::IpVersion::v4 ? "IPv4" : "IPv6",
-        std::get<1>(p.param) == FakeHttpConnection::Type::HTTP1 ? "HTTP1Upstream" : "HTTP2Upstream",
-        std::get<2>(p.param) ? "WaitConnectResponse" : "DoNotWaitConnectResponse");
+    return fmt::format("{}_{}_{}",
+                       std::get<0>(p.param) == Network::Address::IpVersion::v4 ? "IPv4" : "IPv6",
+                       std::get<1>(p.param) == FakeHttpConnection::Type::HTTP1   ? "HTTP1Upstream"
+                       : std::get<1>(p.param) == FakeHttpConnection::Type::HTTP2 ? "HTTP2Upstream"
+                                                                                 : "HTTP3Upstream",
+                       std::get<2>(p.param) ? "WaitConnectResponse" : "DoNotWaitConnectResponse");
   }
 
   void SetUp() override {
@@ -1087,7 +1093,8 @@ INSTANTIATE_TEST_SUITE_P(
     IpAndHttpVersions, TcpTunnelingIntegrationTest,
     ::testing::Combine(testing::ValuesIn(TestEnvironment::getIpVersionsForTest()),
                        testing::Values(FakeHttpConnection::Type::HTTP1,
-                                       FakeHttpConnection::Type::HTTP2),
+                                       FakeHttpConnection::Type::HTTP2,
+                                       FakeHttpConnection::Type::HTTP3),
                        testing::Values(false, true)),
     TcpTunnelingIntegrationTest::paramsToString);
 

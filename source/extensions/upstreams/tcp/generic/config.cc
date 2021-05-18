@@ -16,10 +16,15 @@ TcpProxy::GenericConnPoolPtr GenericConnPoolFactory::createGenericConnPool(
     const absl::optional<TunnelingConfig>& config, Upstream::LoadBalancerContext* context,
     Envoy::Tcp::ConnectionPool::UpstreamCallbacks& upstream_callbacks) const {
   if (config.has_value()) {
-    auto pool_type =
-        ((thread_local_cluster.info()->features() & Upstream::ClusterInfo::Features::HTTP2) != 0)
-            ? Http::CodecClient::Type::HTTP2
-            : Http::CodecClient::Type::HTTP1;
+    Http::CodecClient::Type pool_type;
+    if ((thread_local_cluster.info()->features() & Upstream::ClusterInfo::Features::HTTP3) != 0) {
+      pool_type = Http::CodecClient::Type::HTTP3;
+    } else if ((thread_local_cluster.info()->features() & Upstream::ClusterInfo::Features::HTTP2) !=
+               0) {
+      pool_type = Http::CodecClient::Type::HTTP2;
+    } else {
+      pool_type = Http::CodecClient::Type::HTTP1;
+    }
     auto ret = std::make_unique<TcpProxy::HttpConnPool>(
         thread_local_cluster, context, config.value(), upstream_callbacks, pool_type);
     return (ret->valid() ? std::move(ret) : nullptr);

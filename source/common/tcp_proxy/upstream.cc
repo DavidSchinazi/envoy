@@ -195,8 +195,8 @@ HttpConnPool::HttpConnPool(Upstream::ThreadLocalCluster& thread_local_cluster,
                            Tcp::ConnectionPool::UpstreamCallbacks& upstream_callbacks,
                            Http::CodecClient::Type type)
     : config_(config), type_(type), upstream_callbacks_(upstream_callbacks) {
-  conn_pool_ = thread_local_cluster.httpConnPool(Upstream::ResourcePriority::Default, absl::nullopt,
-                                                 context);
+  conn_pool_ = thread_local_cluster.httpConnPool(Upstream::ResourcePriority::Default,
+                                                 Http::Protocol::Http3, context);
 }
 
 HttpConnPool::~HttpConnPool() {
