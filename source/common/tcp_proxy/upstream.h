@@ -52,8 +52,7 @@ public:
                Http::CodecClient::Type type);
   ~HttpConnPool() override;
 
-  // HTTP/3 upstreams are not supported at the moment.
-  bool valid() const { return conn_pool_ != nullptr && type_ <= Http::CodecClient::Type::HTTP2; }
+  bool valid() const { return conn_pool_ != nullptr; }
 
   // GenericConnPool
   void newStream(GenericConnectionPoolCallbacks& callbacks) override;

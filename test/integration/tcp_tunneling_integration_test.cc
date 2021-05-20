@@ -789,8 +789,8 @@ TEST_P(TcpTunnelingIntegrationTest, TcpProxyUpstreamFlush) {
   }
 }
 
-// Test that h2 connection is reused.
-TEST_P(TcpTunnelingIntegrationTest, H2ConnectionReuse) {
+// Test that h2/h3 connection is reused.
+TEST_P(TcpTunnelingIntegrationTest, ConnectionReuse) {
   if (upstreamProtocol() == FakeHttpConnection::Type::HTTP1) {
     return;
   }
@@ -837,7 +837,7 @@ TEST_P(TcpTunnelingIntegrationTest, H2ConnectionReuse) {
 
 // Test that with HTTP1 we have no connection reuse with downstream close.
 TEST_P(TcpTunnelingIntegrationTest, H1NoConnectionReuse) {
-  if (upstreamProtocol() == FakeHttpConnection::Type::HTTP2) {
+  if (upstreamProtocol() != FakeHttpConnection::Type::HTTP1) {
     return;
   }
   initialize();
@@ -922,7 +922,7 @@ TEST_P(TcpTunnelingIntegrationTest, H1UpstreamCloseNoConnectionReuse) {
 }
 
 TEST_P(TcpTunnelingIntegrationTest, 2xxStatusCodeValidHttp1) {
-  if (upstreamProtocol() == FakeHttpConnection::Type::HTTP2) {
+  if (upstreamProtocol() != FakeHttpConnection::Type::HTTP1) {
     return;
   }
   initialize();
@@ -952,7 +952,7 @@ TEST_P(TcpTunnelingIntegrationTest, 2xxStatusCodeValidHttp1) {
 }
 
 TEST_P(TcpTunnelingIntegrationTest, ContentLengthHeaderIgnoredHttp1) {
-  if (upstreamProtocol() == FakeHttpConnection::Type::HTTP2) {
+  if (upstreamProtocol() != FakeHttpConnection::Type::HTTP1) {
     return;
   }
   initialize();
@@ -981,7 +981,7 @@ TEST_P(TcpTunnelingIntegrationTest, ContentLengthHeaderIgnoredHttp1) {
 }
 
 TEST_P(TcpTunnelingIntegrationTest, TransferEncodingHeaderIgnoredHttp1) {
-  if (upstreamProtocol() == FakeHttpConnection::Type::HTTP2) {
+  if (upstreamProtocol() != FakeHttpConnection::Type::HTTP1) {
     return;
   }
   initialize();

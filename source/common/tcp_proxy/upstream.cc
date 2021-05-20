@@ -195,8 +195,14 @@ HttpConnPool::HttpConnPool(Upstream::ThreadLocalCluster& thread_local_cluster,
                            Tcp::ConnectionPool::UpstreamCallbacks& upstream_callbacks,
                            Http::CodecClient::Type type)
     : config_(config), type_(type), upstream_callbacks_(upstream_callbacks) {
-  conn_pool_ = thread_local_cluster.httpConnPool(Upstream::ResourcePriority::Default,
-                                                 Http::Protocol::Http3, context);
+  absl::optional<Http::Protocol> protocol;
+  if (type_ == Http::CodecClient::Type::HTTP3) {
+    protocol = Http::Protocol::Http3;
+  } else if (type_ == Http::CodecClient::Type::HTTP2) {
+    protocol = Http::Protocol::Http2;
+  }
+  conn_pool_ =
+      thread_local_cluster.httpConnPool(Upstream::ResourcePriority::Default, protocol, context);
 }
 
 HttpConnPool::~HttpConnPool() {
