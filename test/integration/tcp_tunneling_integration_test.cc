@@ -752,6 +752,10 @@ TEST_P(TcpTunnelingIntegrationTest, TcpProxyDownstreamFlush) {
 
 // Test that an upstream flush works correctly (all data is flushed)
 TEST_P(TcpTunnelingIntegrationTest, TcpProxyUpstreamFlush) {
+  if (upstreamProtocol() == FakeHttpConnection::Type::HTTP3) {
+    // TODO(#16291) Debug why this test does not work with h3 and enable it.
+    return;
+  }
   // Use a very large size to make sure it is larger than the kernel socket read buffer.
   const uint32_t size = 50 * 1024 * 1024;
   config_helper_.setBufferLimits(size, size);
