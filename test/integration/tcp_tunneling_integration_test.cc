@@ -102,8 +102,12 @@ TEST_P(ConnectTerminationIntegrationTest, Basic) {
 
   // Now send a FIN from upstream. This should result in clean shutdown downstream.
   ASSERT_TRUE(fake_raw_upstream_connection_->close());
-  ASSERT_TRUE(response_->waitForEndStream());
-  ASSERT_FALSE(response_->reset());
+  if (downstream_protocol_ == Http::CodecClient::Type::HTTP1) {
+    ASSERT_TRUE(codec_client_->waitForDisconnect());
+  } else {
+    ASSERT_TRUE(response_->waitForEndStream());
+    ASSERT_FALSE(response_->reset());
+  }
 }
 
 TEST_P(ConnectTerminationIntegrationTest, BasicAllowPost) {
@@ -146,8 +150,12 @@ TEST_P(ConnectTerminationIntegrationTest, UsingHostMatch) {
 
   // Now send a FIN from upstream. This should result in clean shutdown downstream.
   ASSERT_TRUE(fake_raw_upstream_connection_->close());
-  ASSERT_TRUE(response_->waitForEndStream());
-  ASSERT_FALSE(response_->reset());
+  if (downstream_protocol_ == Http::CodecClient::Type::HTTP1) {
+    ASSERT_TRUE(codec_client_->waitForDisconnect());
+  } else {
+    ASSERT_TRUE(response_->waitForEndStream());
+    ASSERT_FALSE(response_->reset());
+  }
 }
 
 TEST_P(ConnectTerminationIntegrationTest, DownstreamClose) {
@@ -162,6 +170,10 @@ TEST_P(ConnectTerminationIntegrationTest, DownstreamClose) {
 }
 
 TEST_P(ConnectTerminationIntegrationTest, DownstreamReset) {
+  if (downstream_protocol_ == Http::CodecClient::Type::HTTP1) {
+    // Resetting an individual stream requires HTTP/2 or later.
+    return;
+  }
   initialize();
 
   setUpConnection();
@@ -195,6 +207,10 @@ TEST_P(ConnectTerminationIntegrationTest, TestTimeout) {
 }
 
 TEST_P(ConnectTerminationIntegrationTest, BuggyHeaders) {
+  if (downstream_protocol_ == Http::CodecClient::Type::HTTP1) {
+    // These buggy headers using :method require HTTP/2 or later.
+    return;
+  }
   initialize();
 
   // Sending a header-only request is probably buggy, but rather than having a
