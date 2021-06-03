@@ -11,15 +11,26 @@
 namespace Envoy {
 namespace {
 
+using ConnectTerminationParams = std::tuple<Network::Address::IpVersion, Http::CodecClient::Type>;
+
 // Terminating CONNECT and sending raw TCP upstream.
-class ConnectTerminationIntegrationTest
-    : public testing::TestWithParam<Network::Address::IpVersion>,
-      public HttpIntegrationTest {
+class ConnectTerminationIntegrationTest : public testing::TestWithParam<ConnectTerminationParams>,
+                                          public HttpIntegrationTest {
 public:
   ConnectTerminationIntegrationTest()
-      : HttpIntegrationTest(Http::CodecClient::Type::HTTP2, GetParam()) {
+      : HttpIntegrationTest(std::get<1>(GetParam()), std::get<0>(GetParam())) {
     enableHalfClose(true);
   }
+
+  static std::string paramsToString(const testing::TestParamInfo<ConnectTerminationParams>& p) {
+    return fmt::format(
+        "{}_{}", std::get<0>(p.param) == Network::Address::IpVersion::v4 ? "IPv4" : "IPv6",
+        std::get<1>(p.param) == Http::CodecClient::Type::HTTP1   ? "HTTP1Downstream"
+        : std::get<1>(p.param) == Http::CodecClient::Type::HTTP2 ? "HTTP2Downstream"
+                                                                 : "HTTP3Downstream");
+  }
+
+  void SetUp() override { setDownstreamProtocol(std::get<1>(GetParam())); }
 
   void initialize() override {
     config_helper_.addConfigModifier(
@@ -442,9 +453,13 @@ TEST_P(ProxyingConnectIntegrationTest, ProxyConnectWithIP) {
   cleanupUpstreamAndDownstream();
 }
 
-INSTANTIATE_TEST_SUITE_P(IpVersions, ConnectTerminationIntegrationTest,
-                         testing::ValuesIn(TestEnvironment::getIpVersionsForTest()),
-                         TestUtility::ipTestParamsToString);
+INSTANTIATE_TEST_SUITE_P(
+    HttpAndIpVersions, ConnectTerminationIntegrationTest,
+    ::testing::Combine(testing::ValuesIn(TestEnvironment::getIpVersionsForTest()),
+                       ::testing::Values(Http::CodecClient::Type::HTTP1,
+                                         Http::CodecClient::Type::HTTP2,
+                                         Http::CodecClient::Type::HTTP3)),
+    ConnectTerminationIntegrationTest::paramsToString);
 
 using Params = std::tuple<Network::Address::IpVersion, FakeHttpConnection::Type, bool>;
 
