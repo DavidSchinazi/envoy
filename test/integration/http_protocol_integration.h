@@ -49,10 +49,7 @@ public:
   protocolTestParamsToString(const ::testing::TestParamInfo<HttpProtocolTestParams>& p);
 
   HttpProtocolIntegrationTest()
-      : HttpIntegrationTest(
-            GetParam().downstream_protocol, GetParam().version,
-            ConfigHelper::httpProxyConfig(/*downstream_is_quic=*/GetParam().downstream_protocol ==
-                                          Http::CodecClient::Type::HTTP3)) {}
+      : HttpIntegrationTest(GetParam().downstream_protocol, GetParam().version) {}
 
   void SetUp() override {
     setDownstreamProtocol(GetParam().downstream_protocol);

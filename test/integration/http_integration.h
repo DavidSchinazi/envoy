@@ -90,13 +90,24 @@ using IntegrationCodecClientPtr = std::unique_ptr<IntegrationCodecClient>;
 class HttpIntegrationTest : public BaseIntegrationTest {
 public:
   HttpIntegrationTest(Http::CodecClient::Type downstream_protocol,
-                      Network::Address::IpVersion version,
-                      const std::string& config = ConfigHelper::httpProxyConfig());
+                      Network::Address::IpVersion version)
+      : HttpIntegrationTest(
+            downstream_protocol, version,
+            ConfigHelper::httpProxyConfig(/*downstream_use_quic=*/downstream_protocol ==
+                                          Http::CodecClient::Type::HTTP3)) {}
+  HttpIntegrationTest(Http::CodecClient::Type downstream_protocol,
+                      Network::Address::IpVersion version, const std::string& config);
 
   HttpIntegrationTest(Http::CodecClient::Type downstream_protocol,
                       const InstanceConstSharedPtrFn& upstream_address_fn,
-                      Network::Address::IpVersion version,
-                      const std::string& config = ConfigHelper::httpProxyConfig());
+                      Network::Address::IpVersion version)
+      : HttpIntegrationTest(
+            downstream_protocol, upstream_address_fn, version,
+            ConfigHelper::httpProxyConfig(/*downstream_use_quic=*/downstream_protocol ==
+                                          Http::CodecClient::Type::HTTP3)) {}
+  HttpIntegrationTest(Http::CodecClient::Type downstream_protocol,
+                      const InstanceConstSharedPtrFn& upstream_address_fn,
+                      Network::Address::IpVersion version, const std::string& config);
   ~HttpIntegrationTest() override;
 
   void initialize() override;
